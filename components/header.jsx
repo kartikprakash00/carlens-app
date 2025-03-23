@@ -4,10 +4,13 @@ import Link from 'next/link'
 import React from 'react'
 import { Button } from './ui/button';
 import { ArrowLeft, CarFront, Heart, Layout } from 'lucide-react';
+import { checkUser } from '@/lib/checkUser';
 
 const Header = async ({ isAdminPage = false }) => {
 
-    const isAdmin = false;
+    const user = await checkUser();
+
+    const isAdmin = user?.role === "ADMIN";
 
 
     return (

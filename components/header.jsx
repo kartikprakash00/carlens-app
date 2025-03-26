@@ -15,9 +15,9 @@ const Header = async ({ isAdminPage = false }) => {
 
     return (
         <header className='fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 border-b'>
-            <nav className='mx-auto px-4 py-4 flex items-center justify-between'>
+            <nav className='mx-auto px-4 py-0 flex items-center justify-between'>
                 <Link href={isAdminPage ? "/admin" : "/"} className='flex'>
-                    <Image src={"/logo.png"} alt='Vehiql Logo' width={200} height={60} className='h-12 w-auto object-contain' />
+                    <Image src={"/logo.png"} alt='Vehiql Logo' width={200} height={60} className='h-22 w-auto object-contain' />
                     {isAdminPage && (
                         <span className='text-xs font-extralight'>admin</span>
                     )}

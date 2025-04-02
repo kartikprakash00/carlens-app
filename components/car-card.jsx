@@ -35,6 +35,7 @@ const CarCard = ({ car }) => {
 
     const handleToggleSave = async (e) => {
         e.preventDefault();
+        e.stopPropagation();
 
         if (!isSignedIn) {
             toast.error("Please sign in to save cars");
@@ -64,7 +65,7 @@ const CarCard = ({ car }) => {
                 <Button variant="ghost" size="icon" className={`absolute top-0 right-2 bg-white/90 rounded-full p-1.5 ${isSaved
                     ? "text-red-500 hover:text-red-600"
                     : "text-gray-600 hover:text-gray-900"
-                    }`} onClick={handleToggleSave} >
+                    }`} onClick={handleToggleSave} disabled={isToggling} >
                     {isToggling ? (
                         <Loader2 className='h-4 w-4 animate-spin' />
                     ) : (

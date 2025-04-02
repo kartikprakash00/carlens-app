@@ -1,10 +1,18 @@
 "use server";
 
 import aj from "@/lib/arcjet";
-import { serializeCarData } from "@/lib/helper";
 import { db } from "@/lib/prisma"
 import { request } from "@arcjet/next";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+
+const serializeCarData = (car) => {
+    return {
+        ...car,
+        price: car.price ? parseFloat(car.price.toString()) : 0,
+        createdAt: car.createdAt?.toISOString(),
+        updatedAt: car.updatedAt?.toISOString(),
+    };
+}
 
 export const getFeaturedCars = async (limit = 3) => {
     try {

@@ -35,23 +35,28 @@ export const getCarById = async (carId) => {
             isWishlisted = !!savedCar;
         }
 
-        const existingTestDrive = await db.testDriveBooking.findFirst({
-            where: {
-                carId,
-                userId: dbUser.id,
-                status: { in: ["PENDING", "CONFIRMED", "COMPLETED"] },
-            },
-            orderBy: { createdAt: "desc" },
-        });
+
 
         let userTestDrive = null;
 
-        if (existingTestDrive) {
-            userTestDrive = {
-                id: existingTestDrive.id,
-                status: existingTestDrive.status,
-                bookingDate: existingTestDrive.bookingDate.toISOString(),
-            };
+        if (dbUser) {
+
+            const existingTestDrive = await db.testDriveBooking.findFirst({
+                where: {
+                    carId,
+                    userId: dbUser.id,
+                    status: { in: ["PENDING", "CONFIRMED", "COMPLETED"] },
+                },
+                orderBy: { createdAt: "desc" },
+            });
+
+            if (existingTestDrive) {
+                userTestDrive = {
+                    id: existingTestDrive.id,
+                    status: existingTestDrive.status,
+                    bookingDate: existingTestDrive.bookingDate.toISOString(),
+                };
+            }
         }
 
         const dealership = await db.dealershipInfo.findFirst({ include: { workingHours: true } });

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { Input } from './ui/input'
-import { Camera, Upload } from 'lucide-react';
+import { Camera, Search, Upload } from 'lucide-react';
 import { Button } from './ui/button';
 import { useDropzone } from 'react-dropzone';
 import { toast } from 'sonner';
@@ -108,10 +108,11 @@ const HomeSearch = () => {
       <form onSubmit={handleTextSubmit}>
         <div className='relative flex items-center'>
           <Input type="text"
-            placeholder="Enter make, model, or use out AI Image Search..."
+            placeholder="Search or upload image..."
             value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
             className='pl-10 pr-12 py-6 w-full rounded-full border-gray-300 bg-white/95 backdrop-blur-sm'
           />
+          <Search className='absolute left-3 top-3 text-gray-600 w-5' />
 
           <div className='absolute right-[100px]'>
             <Camera size={35}

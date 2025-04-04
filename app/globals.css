@@ -128,9 +128,9 @@
   background-size: 30px 30px;
 }
 
-/* Button {
+Button {
   cursor: pointer;
-} */
+}
 
 @layer utilities {
   .gradient-title {

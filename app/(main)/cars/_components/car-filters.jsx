@@ -136,6 +136,10 @@ const CarFilters = ({ filters }) => {
         setIsSheetOpen(false);
     }
 
+    useEffect(() => {
+        applyFilters();
+    }, [sortBy]);
+
     return (
         <div className='flex lg:flex-col justify-between gap-4'>
             {/* mobile filters */}
@@ -172,10 +176,7 @@ const CarFilters = ({ filters }) => {
             </div>
 
             {/* sort selection */}
-            <Select value={sortBy} onValueChange={(value) => {
-                setSortBy(value);
-                setTimeout(() => applyFilters(), 0);
-            }}>
+            <Select value={sortBy} onValueChange={setSortBy}>
                 <SelectTrigger className="w-[180px] lg:w-full">
                     <SelectValue placeholder="Sort by" />
                 </SelectTrigger>

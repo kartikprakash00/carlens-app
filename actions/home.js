@@ -3,19 +3,40 @@
 import aj from "@/lib/arcjet";
 import { db } from "@/lib/prisma"
 import { request } from "@arcjet/next";
+import { auth } from "@clerk/nextjs/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const serializeCarData = (car) => {
+const serializeCarData = (car, isWishlisted = false) => {
     return {
         ...car,
         price: car.price ? parseFloat(car.price.toString()) : 0,
         createdAt: car.createdAt?.toISOString(),
         updatedAt: car.updatedAt?.toISOString(),
+        wishlisted: isWishlisted,
     };
 }
 
 export const getFeaturedCars = async (limit = 3) => {
     try {
+
+        const { userId } = await auth();
+        let dbUser = null;
+        let wishlisted = new Set();
+
+        if (userId) {
+            dbUser = await db.user.findUnique({
+                where: { clerkUserId: userId },
+            });
+
+            if (dbUser) {
+                const savedCars = await db.userSavedCar.findMany({
+                    where: { userId: dbUser.id },
+                    select: { carId: true },
+                });
+
+                wishlisted = new Set(savedCars.map(saved => saved.carId));
+            }
+        }
 
         const cars = await db.car.findMany({
             where: {
@@ -26,7 +47,7 @@ export const getFeaturedCars = async (limit = 3) => {
             orderBy: { createdAt: "desc" },
         });
 
-        return cars.map(serializeCarData);
+        return cars.map(car => serializeCarData(car, wishlisted.has(car.id)));
 
     } catch (error) {
         throw new Error("Error fetching featured cars" + error.message);

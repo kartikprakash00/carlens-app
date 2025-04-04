@@ -13,7 +13,7 @@ const EmiCalculator = ({ price = 1000 }) => {
     const [error, setError] = useState("");
 
     const handleLoanAmountChange = (value) => {
-        const newLoanAmount = Math.min(Math.max(value, 1000), 150000);
+        const newLoanAmount = Math.min(Math.max(value, 1000), 400000);
         setLoanAmount(newLoanAmount);
         const newDownPayment = (downPaymentPercent / 100) * newLoanAmount;
         setDownPayment(newDownPayment);
@@ -100,7 +100,7 @@ const EmiCalculator = ({ price = 1000 }) => {
                                     className='w-full pl-8 pr-4 py-2 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:border-gray-900 dark:focus:border-gray-400'
                                 />
                             </div>
-                            <input type="range" min='1000' max='150000' value={loanAmount} onChange={(e) => handleLoanAmountChange(parseFloat(e.target.value))} className='w-full' />
+                            <input type="range" min='1000' max='400000' value={loanAmount} onChange={(e) => handleLoanAmountChange(parseFloat(e.target.value))} className='w-full' />
                         </div>
                     </div>
 

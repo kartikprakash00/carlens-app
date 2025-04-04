@@ -1,6 +1,7 @@
 import React from 'react'
 import SettingsForm from './_components/settings-form'
 
+
 export const metadata = {
     title: "Settings | CarLens Admin",
     description: "Manage dealership working hours and admin users",

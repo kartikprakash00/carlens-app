@@ -254,7 +254,7 @@ const CarDetails = ({ car, testDriveInfo }) => {
 
             <div className='mt-8 p-6 bg-white rounded-lg shadow-sm'>
                 <h2 className='text-2xl font-bold mb-6'>Specifications</h2>
-                <div className='bg-gray-50 rounded-lg p-6'>\
+                <div className='bg-gray-50 rounded-lg p-6'>
                     <div className='grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8'>
                         <div className='flex justify-between py-2 border-b'>
                             <span className='text-gray-600'>Make</span>

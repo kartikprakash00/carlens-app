@@ -1,5 +1,7 @@
 "use server";
 
+import { checkUser } from "@/lib/checkUser";
+
 import { serializeCarData } from "@/lib/helper";
 import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
@@ -11,9 +13,7 @@ export const getAdmin = async () => {
         throw new Error("Unauthorized");
     }
 
-    const user = await db.user.findUnique({
-        where: { clerkUserId: userId },
-    });
+    const user = await checkUser();
 
     if (!user || user.role !== 'ADMIN') {
         return { authorized: false, reason: "not-admin" };
@@ -30,9 +30,7 @@ export const getAdminTestDrives = async ({ search = "", status = "" }) => {
             throw new Error("Unauthorized");
         }
 
-        const user = await db.user.findUnique({
-            where: { clerkUserId: userId },
-        });
+        const user = await checkUser();
 
         if (!user || user.role !== 'ADMIN') {
             throw new Error("Unauthorized access");
@@ -112,9 +110,7 @@ export const updateTestDriveStatus = async (bookingId, newStatus) => {
             throw new Error("Unauthorized");
         }
 
-        const user = await db.user.findUnique({
-            where: { clerkUserId: userId },
-        });
+        const user = await checkUser();
 
         if (!user || user.role !== 'ADMIN') {
             throw new Error("Unauthorized access");
@@ -147,6 +143,9 @@ export const updateTestDriveStatus = async (bookingId, newStatus) => {
 
         revalidatePath("/admin/test-drives");
         revalidatePath("/reservations");
+        revalidatePath(`/cars/${booking.carId}`);
+        revalidatePath(`/test-drive/${booking.carId}`);
+        revalidatePath("/admin");
 
         return { success: true, message: "Test drive status updated successfully" };
 
@@ -163,72 +162,30 @@ export const getDashboardData = async () => {
             throw new Error("Unauthorized");
         }
 
-        const user = await db.user.findUnique({
-            where: { clerkUserId: userId },
-        });
+        const user = await checkUser();
 
         if (!user || user.role !== 'ADMIN') {
             return { authorized: false, error: "Unauthorized" };
         }
 
-        // const totalCars = await db.car.count();
-        // const availableCars = await db.car.count({ where: { status: "AVAILABLE" } });
-        // const soldCars = await db.car.count({ where: { status: "SOLD" } });
-        // const unavailableCars = await db.car.count({ where: { status: "UNAVAILABLE" } });
-        // const featuredCars = await db.car.count({ where: { featured: true } });
-
-        // const totalTestDrives = await db.testDriveBooking.count();
-        // const pendingTestDrives = await db.testDriveBooking.count({ where: { status: "PENDING" } });
-        // const confirmedTestDrives = await db.testDriveBooking.count({ where: { status: "CONFIRMED" } });
-        // const completedTestDrives = await db.testDriveBooking.count({ where: { status: "COMPLETED" } });
-        // const cancelledTestDrives = await db.testDriveBooking.count({ where: { status: "CANCELLED" } });
-        // const noShowTestDrives = await db.testDriveBooking.count({ where: { status: "NO_SHOW" } });
-
-        // const completedTestDriveCarIds = await db.testDriveBooking.findMany({
-        //     where: { status: "COMPLETED" },
-        //     select: { carId: true },
-        // });
-
-        // const soldCarsAfterTestDrive = await db.car.count({
-        //     where: {
-        //         id: { in: completedTestDriveCarIds.map(item => item.carId) },
-        //         status: "SOLD",
-        //     },
-        // });
-
-        // const conversionRate = completedTestDrives > 0 ? (soldCarsAfterTestDrive / completedTestDrives) * 100 : 0;
-
-        const [cars, testDrives] = await Promise.all([
-            db.car.findMany({
-                select: {
-                    id: true,
-                    status: true,
-                    featured: true,
-                },
-            }),
-            db.testDriveBooking.findMany({
-                select: {
-                    id: true,
-                    status: true,
-                    carId: true,
-                },
-            })
+        const [carGroups, bookingGroups, featuredCars, soldCarsAfterTestDrive] = await Promise.all([
+            db.car.groupBy({ by: ["status"], _count: { _all: true } }),
+            db.testDriveBooking.groupBy({ by: ["status"], _count: { _all: true } }),
+            db.car.count({ where: { featured: true } }),
+            db.car.count({ where: { status: "SOLD", testDriveBookings: { some: { status: "COMPLETED" } } } }),
         ]);
-
-        const totalCars = cars.length;
-        const availableCars = cars.filter((car) => car.status === "AVAILABLE").length;
-        const soldCars = cars.filter((car) => car.status === "SOLD").length;
-        const unavailableCars = cars.filter((car) => car.status === "UNAVAILABLE").length;
-        const featuredCars = cars.filter((car) => car.featured === true).length;
-
-        const totalTestDrives = testDrives.length;
-        const pendingTestDrives = testDrives.filter((td) => td.status === "PENDING").length;
-        const confirmedTestDrives = testDrives.filter((td) => td.status === "CONFIRMED").length;
-        const completedTestDrives = testDrives.filter((td) => td.status === "COMPLETED").length;
-        const cancelledTestDrives = testDrives.filter((td) => td.status === "CANCELLED").length;
-        const noShowTestDrives = testDrives.filter((td) => td.status === "NO_SHOW").length;
-        const completedTestDriveCarIds = testDrives.filter((td) => td.status === "COMPLETED").map((td) => td.carId);
-        const soldCarsAfterTestDrive = cars.filter((car) => car.status === "SOLD" && completedTestDriveCarIds.includes(car.id)).length;
+        const carCounts = Object.fromEntries(carGroups.map(row => [row.status, row._count._all]));
+        const bookingCounts = Object.fromEntries(bookingGroups.map(row => [row.status, row._count._all]));
+        const totalCars = carGroups.reduce((sum, row) => sum + row._count._all, 0);
+        const availableCars = carCounts.AVAILABLE || 0;
+        const soldCars = carCounts.SOLD || 0;
+        const unavailableCars = carCounts.UNAVAILABLE || 0;
+        const totalTestDrives = bookingGroups.reduce((sum, row) => sum + row._count._all, 0);
+        const pendingTestDrives = bookingCounts.PENDING || 0;
+        const confirmedTestDrives = bookingCounts.CONFIRMED || 0;
+        const completedTestDrives = bookingCounts.COMPLETED || 0;
+        const cancelledTestDrives = bookingCounts.CANCELLED || 0;
+        const noShowTestDrives = bookingCounts.NO_SHOW || 0;
 
         const conversionRate = completedTestDrives > 0 ? (soldCarsAfterTestDrive / completedTestDrives) * 100 : 0;
 

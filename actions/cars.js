@@ -1,11 +1,14 @@
 "use server";
+import { generateCarContent } from "@/lib/generate-car-content";
+
+import { checkUser } from "@/lib/checkUser";
 
 import { serializeCarData } from "@/lib/helper";
 import { db } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase";
 import { auth } from "@clerk/nextjs/server";
 import { GoogleGenerativeAI } from "@google/generative-ai"
-import { revalidatePath } from "next/cache";
+import { invalidateInventory } from "@/lib/invalidate-inventory";
 import { cookies } from "next/headers";
 import { v4 as uuidv4 } from "uuid";
 
@@ -67,7 +70,7 @@ export const processCarImageWithAI = async (file) => {
             Only respond with the JSON object, nothing else.
         `;
 
-        const result = await model.generateContent([imagePart, prompt]);
+        const result = await generateCarContent(model, [imagePart, prompt]);
 
         const response = await result.response;
         const text = response.text();
@@ -121,9 +124,7 @@ export const addCar = async ({ carData, images }) => {
         const { userId } = await auth();
         if (!userId) throw new Error("Unauthorized");
 
-        const user = await db.user.findUnique({
-            where: { clerkUserId: userId },
-        });
+        const user = await checkUser();
 
         if (!user) throw new Error("User not found");
 
@@ -191,7 +192,7 @@ export const addCar = async ({ carData, images }) => {
             },
         });
 
-        revalidatePath('/admin/cars');
+        invalidateInventory();
 
         return {
             success: true,
@@ -208,9 +209,7 @@ export const getCars = async (search = "") => {
         const { userId } = await auth();
         if (!userId) throw new Error("Unauthorized");
 
-        const user = await db.user.findUnique({
-            where: { clerkUserId: userId },
-        });
+        const user = await checkUser();
         if (!user) throw new Error("User not found");
 
         let where = {};
@@ -251,9 +250,7 @@ export const deleteCar = async (id) => {
         const { userId } = await auth();
         if (!userId) throw new Error("Unauthorized");
 
-        const user = await db.user.findUnique({
-            where: { clerkUserId: userId },
-        });
+        const user = await checkUser();
         if (!user) throw new Error("User not found");
 
         const car = await db.car.findUnique({
@@ -297,7 +294,7 @@ export const deleteCar = async (id) => {
             console.error("Error with storage operations", storageError);
         }
 
-        revalidatePath("/admin/cars");
+        invalidateInventory();
 
         return { success: true };
     } catch (error) {
@@ -315,9 +312,7 @@ export const updateCarStatus = async (id, { status, featured }) => {
         const { userId } = await auth();
         if (!userId) throw new Error("Unauthorized");
 
-        const user = await db.user.findUnique({
-            where: { clerkUserId: userId },
-        });
+        const user = await checkUser();
         if (!user) throw new Error("User not found");
 
         const updateData = {};
@@ -335,7 +330,7 @@ export const updateCarStatus = async (id, { status, featured }) => {
             data: updateData,
         });
 
-        revalidatePath("/admin/cars");
+        invalidateInventory();
 
         return { success: true };
 

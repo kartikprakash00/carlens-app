@@ -1,28 +1,31 @@
 "use client";
+import { normalizeCarQuery } from "@/lib/car-query";
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Filter, Sliders, X } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useTransition } from 'react'
 import CarFilterControls from './filter-controls';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const CarFilters = ({ filters }) => {
 
     const router = useRouter();
+    const [isPending, startTransition] = useTransition();
     const pathname = usePathname();
     const searchParams = useSearchParams();
 
 
-    const currentMake = searchParams.get("make") || "";
-    const currentBodyType = searchParams.get("bodyType") || "";
-    const currentFuelType = searchParams.get("fuelType") || "";
-    const currentTransmission = searchParams.get("transmission") || "";
-    const currentMinPrice = searchParams.get("minPrice") ? parseInt(searchParams.get("minPrice")) : filters.priceRange.min;
-    const currentMaxPrice = searchParams.get("maxPrice") ? parseInt(searchParams.get("maxPrice")) : filters.priceRange.max;
-    const currentSortBy = searchParams.get("sortBy") || "newest";
+    const normalized = normalizeCarQuery(Object.fromEntries(searchParams));
+    const currentMake = normalized.make;
+    const currentBodyType = normalized.bodyType;
+    const currentFuelType = normalized.fuelType;
+    const currentTransmission = normalized.transmission;
+    const currentMinPrice = Math.min(filters.priceRange.max, Math.max(filters.priceRange.min, normalized.minPrice));
+    const currentMaxPrice = Math.max(currentMinPrice, Math.min(filters.priceRange.max, normalized.maxPrice));
+    const currentSortBy = normalized.sortBy;
 
     const [make, setMake] = useState(currentMake);
     const [bodyType, setBodyType] = useState(currentBodyType);
@@ -99,11 +102,11 @@ const CarFilters = ({ filters }) => {
         const query = params.toString();
         const url = query ? `${pathname}?${query}` : pathname;
 
-        router.push(url);
+        if (url !== `${pathname}${searchParams.size ? `?${searchParams.toString()}` : ""}`) startTransition(() => router.push(url));
         setIsSheetOpen(false);
     }
 
-    const applyFilters = () => {
+    const applyFilters = (nextSort = sortBy) => {
         const params = new URLSearchParams();
 
         if (make)
@@ -118,30 +121,28 @@ const CarFilters = ({ filters }) => {
             params.set("minPrice", priceRange[0].toString());
         if (priceRange[1] < filters.priceRange.max)
             params.set("maxPrice", priceRange[1].toString());
-        if (sortBy !== "newest")
-            params.set("sortBy", sortBy);
+        if (nextSort !== "newest")
+            params.set("sortBy", nextSort);
 
         const search = searchParams.get("search");
-        const page = searchParams.get("page");
+
 
         if (search)
             params.set("search", search);
-        if (page && page !== "1")
-            params.set("page", page);
+
 
         const query = params.toString();
         const url = query ? `${pathname}?${query}` : pathname;
 
-        router.push(url);
+        if (url !== `${pathname}${searchParams.size ? `?${searchParams.toString()}` : ""}`) startTransition(() => router.push(url));
         setIsSheetOpen(false);
     }
 
-    useEffect(() => {
-        applyFilters();
-    }, [sortBy]);
+
 
     return (
-        <div className='flex lg:flex-col justify-between gap-4'>
+        <div aria-busy={isPending} className='flex lg:flex-col justify-between gap-4'>
+            {isPending && <span role="status" className="sr-only">Updating cars</span>}
             {/* mobile filters */}
             <div className='lg:hidden mb-4'>
                 <div className='flex items-center'>
@@ -168,7 +169,7 @@ const CarFilters = ({ filters }) => {
 
                             <SheetFooter className='sm:justify-between flex-row pt-2 border-t space-x-4 mt-auto'>
                                 <Button type='button' variant='outline' onClick={clearFilters} className='flex-1'>Reset</Button>
-                                <Button type='button' onClick={applyFilters} className='flex-1'>Apply Filter</Button>
+                                <Button type='button' disabled={isPending} onClick={() => applyFilters()} className='flex-1'>{isPending ? "Updating…" : "Apply Filter"}</Button>
                             </SheetFooter>
                         </SheetContent>
                     </Sheet>
@@ -176,7 +177,7 @@ const CarFilters = ({ filters }) => {
             </div>
 
             {/* sort selection */}
-            <Select value={sortBy} onValueChange={setSortBy}>
+            <Select value={sortBy} onValueChange={(value) => { setSortBy(value); applyFilters(value); }}>
                 <SelectTrigger className="w-[180px] lg:w-full">
                     <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
@@ -214,7 +215,7 @@ const CarFilters = ({ filters }) => {
                     </div>
 
                     <div className='px-4 py-4 border-t'>
-                        <Button onClick={applyFilters} className='w-full'>Apply Filters</Button>
+                        <Button disabled={isPending} onClick={() => applyFilters()} className='w-full'>{isPending ? "Updating…" : "Apply Filters"}</Button>
                     </div>
                 </div>
             </div>

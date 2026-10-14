@@ -3,45 +3,45 @@
 import { serializeCarData } from "@/lib/helper";
 import { db } from "@/lib/prisma"
 import { auth } from "@clerk/nextjs/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, unstable_cache } from "next/cache";
+import { checkUser } from "@/lib/checkUser";
+import { normalizeCarQuery } from "@/lib/car-query";
 
-export const getCarFilters = async () => {
+const readCarFilters = unstable_cache(async () => {
 
     try {
 
-        const makes = await db.car.findMany({
-            where: { status: "AVAILABLE" },
-            select: { make: true },
-            distinct: ["make"],
-            orderBy: { make: "asc" },
-        });
-
-        const bodyTypes = await db.car.findMany({
-            where: { status: "AVAILABLE" },
-            select: { bodyType: true },
-            distinct: ["bodyType"],
-            orderBy: { bodyType: "asc" },
-        });
-
-        const fuelTypes = await db.car.findMany({
-            where: { status: "AVAILABLE" },
-            select: { fuelType: true },
-            distinct: ["fuelType"],
-            orderBy: { fuelType: "asc" },
-        });
-
-        const transmissions = await db.car.findMany({
-            where: { status: "AVAILABLE" },
-            select: { transmission: true },
-            distinct: ["transmission"],
-            orderBy: { transmission: "asc" },
-        });
-
-        const priceAggregations = await db.car.aggregate({
-            where: { status: "AVAILABLE" },
-            _min: { price: true },
-            _max: { price: true },
-        });
+        const [makes, bodyTypes, fuelTypes, transmissions, priceAggregations] = await Promise.all([
+            db.car.findMany({
+                where: { status: "AVAILABLE" },
+                select: { make: true },
+                distinct: ["make"],
+                orderBy: { make: "asc" },
+            }),
+            db.car.findMany({
+                where: { status: "AVAILABLE" },
+                select: { bodyType: true },
+                distinct: ["bodyType"],
+                orderBy: { bodyType: "asc" },
+            }),
+            db.car.findMany({
+                where: { status: "AVAILABLE" },
+                select: { fuelType: true },
+                distinct: ["fuelType"],
+                orderBy: { fuelType: "asc" },
+            }),
+            db.car.findMany({
+                where: { status: "AVAILABLE" },
+                select: { transmission: true },
+                distinct: ["transmission"],
+                orderBy: { transmission: "asc" },
+            }),
+            db.car.aggregate({
+                where: { status: "AVAILABLE" },
+                _min: { price: true },
+                _max: { price: true },
+            })
+        ]);
 
         return {
             success: true,
@@ -60,30 +60,14 @@ export const getCarFilters = async () => {
     } catch (error) {
         throw new Error("Error fetching car filters: " + error.message);
     }
-}
+}, ["car-filters"], { revalidate: 60, tags: ["car-filters"] });
 
-export const getCars = async ({
-    search = "",
-    make = "",
-    bodyType = "",
-    fuelType = "",
-    transmission = "",
-    minPrice = 0,
-    maxPrice = Number.MAX_SAFE_INTEGER,
-    sortBy = "newest", // Options: newest, priceAsc, priceDesc
-    page = 1,
-    limit = 6,
-}) => {
+export const getCarFilters = async () => readCarFilters();
+
+export const getCars = async (input = {}) => {
+    const { search, make, bodyType, fuelType, transmission, minPrice, maxPrice, sortBy, page, limit } = normalizeCarQuery(input);
     try {
-
-        const { userId } = await auth();
-        let dbUser = null;
-
-        if (userId) {
-            dbUser = await db.user.findUnique({
-                where: { clerkUserId: userId },
-            });
-        }
+        const userPromise = checkUser();
 
         let where = {
             status: "AVAILABLE",
@@ -113,7 +97,7 @@ export const getCars = async ({
             gte: parseFloat(minPrice) || 0,
         };
 
-        if (maxPrice && maxPrice < Number.MAX_SAFE_INTEGER) {
+        if (maxPrice < Number.MAX_SAFE_INTEGER) {
             where.price.lte = parseFloat(maxPrice);
         }
 
@@ -133,19 +117,16 @@ export const getCars = async ({
                 break;
         }
 
-        const totalCars = await db.car.count({ where });
-
-        const cars = await db.car.findMany({
-            where,
-            take: limit,
-            skip,
-            orderBy,
-        });
+        const [totalCars, cars, dbUser] = await Promise.all([
+            db.car.count({ where }),
+            db.car.findMany({ where, take: limit, skip, orderBy }),
+            userPromise,
+        ]);
 
         let wishlisted = new Set();
         if (dbUser) {
             const savedCars = await db.userSavedCar.findMany({
-                where: { userId: dbUser.id },
+                where: { userId: dbUser.id, carId: { in: cars.map(car => car.id) } },
                 select: { carId: true },
             });
 
@@ -178,9 +159,7 @@ export const toggleSavedCar = async (carId) => {
             throw new Error("Unauthorized");
         }
 
-        const user = await db.user.findUnique({
-            where: { clerkUserId: userId },
-        });
+        const user = await checkUser();
 
         if (!user) {
             throw new Error("User not found");
@@ -217,6 +196,9 @@ export const toggleSavedCar = async (carId) => {
             });
 
             revalidatePath(`/saved-cars`);
+            revalidatePath("/");
+            revalidatePath("/cars");
+            revalidatePath(`/cars/${carId}`);
             return {
                 success: true,
                 saved: false,
@@ -232,6 +214,9 @@ export const toggleSavedCar = async (carId) => {
         });
 
         revalidatePath(`/saved-cars`);
+        revalidatePath("/");
+        revalidatePath("/cars");
+        revalidatePath(`/cars/${carId}`);
         return {
             success: true,
             saved: true,
@@ -251,9 +236,7 @@ export const getSavedCars = async () => {
             return { success: false, error: "Unauthorized" };
         }
 
-        const user = await db.user.findUnique({
-            where: { clerkUserId: userId },
-        });
+        const user = await checkUser();
 
         if (!user) {
             return { success: false, error: "User not found" };
@@ -265,7 +248,7 @@ export const getSavedCars = async () => {
             orderBy: { savedAt: "desc" },
         });
 
-        const cars = savedCars.map((saved) => serializeCarData(saved.car));
+        const cars = savedCars.map((saved) => serializeCarData(saved.car, true));
 
         return { success: true, data: cars };
 

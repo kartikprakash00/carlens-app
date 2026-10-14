@@ -308,7 +308,7 @@ const TestDriveForm = ({ car, testDriveInfo }) => {
                             <ul className='space-y-2 text-sm text-gray-600'>
                                 <li className='flex items-start'>
                                     <CheckCircle2 className='h-4 w-4 text-green-500 mr-2 mt-0.5' />
-                                    Bring your driver's license for verification
+                                    Bring your driver&apos;s license for verification
                                 </li>
                                 <li className='flex items-start'>
                                     <CheckCircle2 className='h-4 w-4 text-green-500 mr-2 mt-0.5' />
@@ -358,7 +358,7 @@ const TestDriveForm = ({ car, testDriveInfo }) => {
                             </div>
 
                             <div className='mt-4 bg-blue-50 p-3 rounded text-sm text-blue-700'>
-                                Please arrive 10 minutes early with your driver's license.
+                                Please arrive 10 minutes early with your driver&apos;s license.
                             </div>
                         </div>
                     )}

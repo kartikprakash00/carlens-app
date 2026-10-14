@@ -1,3 +1,30 @@
+## Local development
+
+Use the project-pinned Node runtime before installing or starting the app:
+
+```sh
+nvm use
+npm ci --legacy-peer-deps
+npm run dev
+```
+
+This project is verified with Node 22.22.2 (`.nvmrc`). Node 26 stalled during Next.js startup on the development machine; `nvm use` selects the working version. If it is not installed, run `nvm install` first.
+
+## Performance checks
+
+```sh
+npm run test
+npm run lint
+npm run build
+PERFORMANCE_LOGGING=1 npm start
+# In another terminal:
+npm run benchmark
+```
+
+The benchmark reports first-request and three warm-request timings, status, and HTML bytes. Set `BENCHMARK_CAR_ID` to an existing inventory ID to include a detail page. Protected pages require a local `BENCHMARK_COOKIE` environment variable; without it, their results measure sign-in redirects only. Do not commit cookies or benchmark HTML. Database timing logs contain operation names and durations, never SQL or query arguments.
+
+Filter metadata is revalidated every 60 seconds and immediately expired by inventory mutations. Personalized data is only deduplicated within a server render. Next's time-based cache can serve stale metadata while background revalidation completes after changes made outside this app.
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started

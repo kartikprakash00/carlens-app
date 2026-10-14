@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { Card, CardContent } from './ui/card'
 import Image from 'next/image'
+import Link from 'next/link'
 import { CarIcon, Heart, Loader2 } from 'lucide-react'
 import { Button } from './ui/button'
 import { Badge } from './ui/badge';
@@ -18,14 +19,16 @@ const CarCard = ({ car }) => {
     const router = useRouter();
     const { isSignedIn } = useAuth();
 
+    useEffect(() => { setIsSaved(car.wishlisted); }, [car.wishlisted]);
+
     const { loading: isToggling, fn: toggleSavedCarFn, data: toggleResult, error: toggleError } = useFetch(toggleSavedCar);
 
     useEffect(() => {
-        if (toggleResult?.success && toggleResult.saved !== isSaved) {
+        if (toggleResult?.success) {
             setIsSaved(toggleResult.saved);
             toast.success(toggleResult.message);
         }
-    }, [toggleResult, isSaved]);
+    }, [toggleResult]);
 
     useEffect(() => {
         if (toggleError) {
@@ -55,7 +58,7 @@ const CarCard = ({ car }) => {
                 {
                     car.images && car.images.length > 0 ? (
                         <div className='relative w-full h-full'>
-                            <Image src={car.images[0]} alt={`${car.make} ${car.model}`} fill className='object-cover group-hover:scale-105 transition duration-300' />
+                            <Image src={car.images[0]} alt={`${car.make} ${car.model}`} sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw" fill className='object-cover group-hover:scale-105 transition duration-300' />
                         </div>
                     ) : (
                         <div className='w-full h-full bg-gray-200 flex items-center justify-center'>
@@ -95,7 +98,7 @@ const CarCard = ({ car }) => {
                 </div>
 
                 <div className='flex justify-between'>
-                    <Button className="flex-1" onClick={() => router.push(`/cars/${car.id}`)}>View Car</Button>
+                    <Button className="flex-1" asChild><Link href={`/cars/${car.id}`}>View Car</Link></Button>
                 </div>
             </CardContent>
         </Card>

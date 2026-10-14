@@ -57,7 +57,7 @@ const TestDriveCard = ({ booking, onCancel, showActions = true, isPast = false, 
                     <div className='sm:w-1/4 relative h-40 sm:h-auto'>
                         {booking.car.images && booking.car.images.length > 0 ? (
                             <div className='relative w-full h-full'>
-                                <Image src={booking.car.images[0]} alt={`${booking.car.make} ${booking.car.model}`} fill className='object-cover' />
+                                <Image src={booking.car.images[0]} alt={`${booking.car.make} ${booking.car.model}`} sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw" fill className='object-cover' />
                             </div>
                         ) : (
                             <div className='w-full h-full bg-gray-200 flex items-center justify-center'>

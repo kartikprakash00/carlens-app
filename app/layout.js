@@ -1,6 +1,8 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/header";
+import UserHeader from "@/components/user-header";
+import { Suspense } from "react";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "sonner";
 
@@ -16,7 +18,7 @@ export default function RootLayout({ children }) {
     <ClerkProvider>
       <html lang="en">
         <body className={`${inter.className}`}>
-          <Header />
+          <Suspense fallback={<Header />}><UserHeader /></Suspense>
           <main className="min-h-screen">{children}</main>
           <Toaster richColors />
           {/* <footer className="bg-blue-50 py-12">

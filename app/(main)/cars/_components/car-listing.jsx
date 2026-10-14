@@ -1,88 +1,17 @@
-"use client";
-
-import { getCars } from '@/actions/car-listing';
-import useFetch from '@/hooks/use-fetch';
-import { useRouter, useSearchParams } from 'next/navigation';
-import React, { useEffect, useState } from 'react'
-import CarListingsLoading from './car-listings-loading';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import React from 'react'
 import { Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import CarCard from '@/components/car-card';
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 
-const CarListing = () => {
-
-    const [currentPage, setCurrentPage] = useState(1);
-    const limit = 6;
-
-    const searchParams = useSearchParams();
-    const router = useRouter();
-
-    const search = searchParams.get("search") || "";
-    const make = searchParams.get("make") || "";
-    const bodyType = searchParams.get("bodyType") || "";
-    const fuelType = searchParams.get("fuelType") || "";
-    const transmission = searchParams.get("transmission") || "";
-    const minPrice = searchParams.get("minPrice") || 0;
-    const maxPrice = searchParams.get("maxPrice") || Number.MAX_SAFE_INTEGER;
-    const sortBy = searchParams.get("sortBy") || "newest";
-    const page = parseInt(searchParams.get("page") || "1");
-
-    const { loading, fn: fetchCars, data: result, error } = useFetch(getCars);
-
-    useEffect(() => {
-        fetchCars({
-            search,
-            make,
-            bodyType,
-            fuelType,
-            transmission,
-            minPrice,
-            maxPrice,
-            sortBy,
-            page,
-            limit,
-        });
-    }, [search, make, bodyType, fuelType, transmission, minPrice, maxPrice, sortBy, page]);
-
-    useEffect(() => {
-        if (currentPage !== page) {
-            const params = new URLSearchParams(searchParams);
-            params.set("page", currentPage.toString());
-            router.push(`?${params.toString()}`);
-        }
-    }, [currentPage, router, searchParams, page]);
-
-    const handlePageChange = (pageNum) => {
-        setCurrentPage(pageNum);
-    }
-
+const CarListing = ({ result, query }) => {
+    const { page, limit } = result.pagination;
+    const searchParams = new URLSearchParams(query);
     const getPaginationUrl = (pageNum) => {
         const params = new URLSearchParams(searchParams);
         params.set("page", pageNum.toString());
         return `?${params.toString()}`;
-    }
-
-    if (loading && !result) {
-        return <CarListingsLoading />
-    }
-
-    if (error || (!result && !result?.success)) {
-        return (
-            <Alert variant='destructive'>
-                <Info className="h-4 w-4" />
-                <AlertTitle>Error</AlertTitle>
-                <AlertDescription>
-                    Failed to load cars. Please try again later.
-                </AlertDescription>
-            </Alert>
-        )
-    }
-
-    if (!result || !result.data) {
-        return null;
     }
 
     const { data: cars, pagination } = result;
@@ -95,7 +24,7 @@ const CarListing = () => {
                 </div>
                 <h3 className='text-lg font-medium mb-2'>No cars found</h3>
                 <p className='text-gray-500 mb-6 max-w-md'>
-                    Sorry, we couldn't find any cars matching your search criteria. Try adjusting your filters or search term.
+                    Sorry, we couldn&apos;t find any cars matching your search criteria. Try adjusting your filters or search term.
                 </p>
                 <Button variant='outline' asChild>
                     <Link href='/cars'>Clear all filters</Link>
@@ -135,10 +64,6 @@ const CarListing = () => {
             <PaginationItem key={pageNumber}>
                 <PaginationLink href={getPaginationUrl(pageNumber)}
                     isActive={pageNumber === page}
-                    onClick={(e) => {
-                        e.preventDefault();
-                        handlePageChange(pageNumber);
-                    }}
                 >
                     {pageNumber}
                 </PaginationLink>
@@ -167,26 +92,14 @@ const CarListing = () => {
                 <Pagination className='mt-10'>
                     <PaginationContent>
                         <PaginationItem>
-                            <PaginationPrevious href={getPaginationUrl(page - 1)}
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    if (page > 1) {
-                                        handlePageChange(page - 1);
-                                    }
-                                }}
+                            <PaginationPrevious href={getPaginationUrl(Math.max(1, page - 1))}
                                 className={page <= 1 ? 'pointer-events-none opacity-50' : ''}
                             />
                         </PaginationItem>
                         {paginationItems}
 
                         <PaginationItem>
-                            <PaginationNext href={getPaginationUrl(page + 1)}
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    if (page < pagination.pages) {
-                                        handlePageChange(page + 1);
-                                    }
-                                }}
+                            <PaginationNext href={getPaginationUrl(Math.min(pagination.pages, page + 1))}
                                 className={page >= pagination.pages ? 'pointer-events-none opacity-50' : ''}
                             />
                         </PaginationItem>

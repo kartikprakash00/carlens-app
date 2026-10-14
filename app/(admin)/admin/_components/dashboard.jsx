@@ -88,7 +88,7 @@ const Dashboard = ({ initialData }) => {
                             <CardContent>
                                 <div className="text-2xl font-bold">{cars.sold}</div>
                                 <p className="text-xs text-muted-foreground">
-                                    {((cars.sold / cars.total) * 100).toFixed(1)}% of inventory
+                                    {((cars.sold / (cars.total || 1)) * 100).toFixed(1)}% of inventory
                                 </p>
                             </CardContent>
                         </Card>
@@ -105,10 +105,10 @@ const Dashboard = ({ initialData }) => {
                                         <h3 className='font-medium text-sm mb-2'>Car Inventory</h3>
                                         <div className='flex items-center'>
                                             <div className='w-full bg-gray-200 rounded-full h-2.5'>
-                                                <div className='bg-green-600 h-2.5 rounded-full' style={{ width: `${(cars.available / cars.total) * 100}%` }}></div>
+                                                <div className='bg-green-600 h-2.5 rounded-full' style={{ width: `${(cars.available / (cars.total || 1)) * 100}%` }}></div>
                                             </div>
                                             <span className='ml-2 text-sm'>
-                                                {((cars.available / cars.total) * 100).toFixed(0)}%
+                                                {((cars.available / (cars.total || 1)) * 100).toFixed(0)}%
                                             </span>
                                         </div>
                                         <p className='text-xs text-gray-500 mt-2'>
@@ -184,7 +184,7 @@ const Dashboard = ({ initialData }) => {
                             <CardContent>
                                 <div className="text-2xl font-bold">{testDrives.pending}</div>
                                 <p className="text-xs text-muted-foreground">
-                                    {((testDrives.pending / testDrives.total) * 100).toFixed(1)}% of bookings
+                                    {((testDrives.pending / (testDrives.total || 1)) * 100).toFixed(1)}% of bookings
                                 </p>
                             </CardContent>
                         </Card>
@@ -196,7 +196,7 @@ const Dashboard = ({ initialData }) => {
                             <CardContent>
                                 <div className="text-2xl font-bold">{testDrives.confirmed}</div>
                                 <p className="text-xs text-muted-foreground">
-                                    {((testDrives.confirmed / testDrives.total) * 100).toFixed(1)}% of bookings
+                                    {((testDrives.confirmed / (testDrives.total || 1)) * 100).toFixed(1)}% of bookings
                                 </p>
                             </CardContent>
                         </Card>
@@ -208,7 +208,7 @@ const Dashboard = ({ initialData }) => {
                             <CardContent>
                                 <div className="text-2xl font-bold">{testDrives.completed}</div>
                                 <p className="text-xs text-muted-foreground">
-                                    {((testDrives.completed / testDrives.total) * 100).toFixed(1)}% of bookings
+                                    {((testDrives.completed / (testDrives.total || 1)) * 100).toFixed(1)}% of bookings
                                 </p>
                             </CardContent>
                         </Card>
@@ -220,7 +220,7 @@ const Dashboard = ({ initialData }) => {
                             <CardContent>
                                 <div className="text-2xl font-bold">{testDrives.cancelled}</div>
                                 <p className="text-xs text-muted-foreground">
-                                    {((testDrives.cancelled / testDrives.total) * 100).toFixed(1)}% of bookings
+                                    {((testDrives.cancelled / (testDrives.total || 1)) * 100).toFixed(1)}% of bookings
                                 </p>
                             </CardContent>
                         </Card>
@@ -250,7 +250,7 @@ const Dashboard = ({ initialData }) => {
                                             Completion Rate
                                         </h3>
                                         <div className="text-3xl font-bold text-green-600">
-                                            {testDrives.total ? ((testDrives.completed / testDrives.total) * 100).toFixed(1) : 0}%
+                                            {testDrives.total ? ((testDrives.completed / (testDrives.total || 1)) * 100).toFixed(1) : 0}%
                                         </div>
                                         <p className="text-sm text-gray-600 mt-1">
                                             Test drives successfully completed
@@ -265,11 +265,11 @@ const Dashboard = ({ initialData }) => {
                                         <div className="flex justify-between text-sm">
                                             <span>Pending</span>
                                             <span className="font-medium">
-                                                {testDrives.pending} ({((testDrives.pending / testDrives.total) * 100).toFixed(1)}%)
+                                                {testDrives.pending} ({((testDrives.pending / (testDrives.total || 1)) * 100).toFixed(1)}%)
                                             </span>
                                         </div>
                                         <div className="w-full bg-gray-200 rounded-full h-2.5">
-                                            <div className="bg-amber-500 h-2.5 rounded-full" style={{ width: `${(testDrives.pending / testDrives.total) * 100}%`, }}></div>
+                                            <div className="bg-amber-500 h-2.5 rounded-full" style={{ width: `${(testDrives.pending / (testDrives.total || 1)) * 100}%`, }}></div>
                                         </div>
                                     </div>
 
@@ -277,11 +277,11 @@ const Dashboard = ({ initialData }) => {
                                         <div className="flex justify-between text-sm">
                                             <span>Confirmed</span>
                                             <span className="font-medium">
-                                                {testDrives.confirmed} ({((testDrives.confirmed / testDrives.total) * 100).toFixed(1)}%)
+                                                {testDrives.confirmed} ({((testDrives.confirmed / (testDrives.total || 1)) * 100).toFixed(1)}%)
                                             </span>
                                         </div>
                                         <div className="w-full bg-gray-200 rounded-full h-2.5">
-                                            <div className="bg-green-500 h-2.5 rounded-full" style={{ width: `${(testDrives.confirmed / testDrives.total) * 100}%`, }}></div>
+                                            <div className="bg-green-500 h-2.5 rounded-full" style={{ width: `${(testDrives.confirmed / (testDrives.total || 1)) * 100}%`, }}></div>
                                         </div>
                                     </div>
 
@@ -289,11 +289,11 @@ const Dashboard = ({ initialData }) => {
                                         <div className="flex justify-between text-sm">
                                             <span>Completed</span>
                                             <span className="font-medium">
-                                                {testDrives.completed} ({((testDrives.completed / testDrives.total) * 100).toFixed(1)}%)
+                                                {testDrives.completed} ({((testDrives.completed / (testDrives.total || 1)) * 100).toFixed(1)}%)
                                             </span>
                                         </div>
                                         <div className="w-full bg-gray-200 rounded-full h-2.5">
-                                            <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${(testDrives.completed / testDrives.total) * 100}%`, }}></div>
+                                            <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${(testDrives.completed / (testDrives.total || 1)) * 100}%`, }}></div>
                                         </div>
                                     </div>
 
@@ -301,11 +301,11 @@ const Dashboard = ({ initialData }) => {
                                         <div className="flex justify-between text-sm">
                                             <span>Cancelled</span>
                                             <span className="font-medium">
-                                                {testDrives.cancelled} ({((testDrives.cancelled / testDrives.total) * 100).toFixed(1)}%)
+                                                {testDrives.cancelled} ({((testDrives.cancelled / (testDrives.total || 1)) * 100).toFixed(1)}%)
                                             </span>
                                         </div>
                                         <div className="w-full bg-gray-200 rounded-full h-2.5">
-                                            <div className="bg-red-500 h-2.5 rounded-full" style={{ width: `${(testDrives.cancelled / testDrives.total) * 100}%`, }}></div>
+                                            <div className="bg-red-500 h-2.5 rounded-full" style={{ width: `${(testDrives.cancelled / (testDrives.total || 1)) * 100}%`, }}></div>
                                         </div>
                                     </div>
 
@@ -313,11 +313,11 @@ const Dashboard = ({ initialData }) => {
                                         <div className="flex justify-between text-sm">
                                             <span>No Show</span>
                                             <span className="font-medium">
-                                                {testDrives.noShow} ({((testDrives.noShow / testDrives.total) * 100).toFixed(1)}%)
+                                                {testDrives.noShow} ({((testDrives.noShow / (testDrives.total || 1)) * 100).toFixed(1)}%)
                                             </span>
                                         </div>
                                         <div className="w-full bg-gray-200 rounded-full h-2.5">
-                                            <div className="bg-gray-500 h-2.5 rounded-full" style={{ width: `${(testDrives.noShow / testDrives.total) * 100}%`, }}></div>
+                                            <div className="bg-gray-500 h-2.5 rounded-full" style={{ width: `${(testDrives.noShow / (testDrives.total || 1)) * 100}%`, }}></div>
                                         </div>
                                     </div>
                                 </div>

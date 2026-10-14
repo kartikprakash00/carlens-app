@@ -403,7 +403,7 @@ const AddCarForm = () => {
                                         <div className='flex flex-col items-center justify-center'>
                                             <Upload className='h-12 w-12 text-gray-400 mb-3' />
                                             <p className='text-sm text-gray-600'>
-                                                Drag 'n' drop or click to upload multiple images
+                                                Drag &apos;n&apos; drop or click to upload multiple images
                                             </p>
 
                                             <p className='text-gray-500 text-xs mt-1'>(JPG, PNG, WebP, max 5MB each)</p>
@@ -487,7 +487,7 @@ const AddCarForm = () => {
                                             <div className='flex flex-col items-center justify-center'>
                                                 <Camera className='h-12 w-12 text-gray-400 mb-2' />
                                                 <p className='text-gray-600 text-sm'>
-                                                    Drag 'n' drop or click to upload an image
+                                                    Drag &apos;n&apos; drop or click to upload an image
                                                 </p>
                                                 <p className='text-gray-500 text-xs mt-1'>Supports: JPG, PNG, WebP (max 5MB)</p>
                                             </div>
@@ -499,7 +499,7 @@ const AddCarForm = () => {
                                     <h3 className='font-medium mb-2'>How it works</h3>
                                     <ol className='space-y-2 text-sm text-gray-600 list-decimal pl-4'>
                                         <li>Upload a clear image of the car</li>
-                                        <li>Click "Extract Details" to analyze with AI</li>
+                                        <li>Click &quot;Extract Details&quot; to analyze with AI</li>
                                         <li>Review the extracted information</li>
                                         <li>Fill any missing details manually</li>
                                         <li>Add the car to your inventory</li>

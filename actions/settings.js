@@ -1,5 +1,7 @@
 "use server";
 
+import { checkUser } from "@/lib/checkUser";
+
 import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server"
 import { revalidatePath } from "next/cache";
@@ -12,9 +14,7 @@ export const getDealershipInfo = async () => {
             throw new Error("Unauthorized");
         }
 
-        const user = await db.user.findUnique({
-            where: { clerkUserId: userId },
-        });
+        const user = await checkUser();
 
         if (!user) {
             throw new Error("User not found");
@@ -112,9 +112,7 @@ export const saveWorkingHours = async (workingHours) => {
             throw new Error("Unauthorized");
         }
 
-        const user = await db.user.findUnique({
-            where: { clerkUserId: userId },
-        });
+        const user = await checkUser();
 
         if (!user || user.role !== "ADMIN") {
             throw new Error("Not Authorized: Admin access required");
@@ -143,6 +141,8 @@ export const saveWorkingHours = async (workingHours) => {
 
         revalidatePath("/admin/settings");
         revalidatePath("/");
+        revalidatePath("/cars/[id]", "page");
+        revalidatePath("/test-drive/[id]", "page");
 
         return {
             success: true,
@@ -161,9 +161,7 @@ export const getUsers = async () => {
             throw new Error("Unauthorized");
         }
 
-        const user = await db.user.findUnique({
-            where: { clerkUserId: userId },
-        });
+        const user = await checkUser();
 
         if (!user || user.role !== "ADMIN") {
             throw new Error("Not Authorized: Admin access required");
@@ -195,9 +193,7 @@ export const updateUserRole = async (userId, role) => {
             throw new Error("Unauthorized");
         }
 
-        const user = await db.user.findUnique({
-            where: { clerkUserId: adminId },
-        });
+        const user = await checkUser();
 
         if (!user || user.role !== "ADMIN") {
             throw new Error("Not Authorized: Admin access required");

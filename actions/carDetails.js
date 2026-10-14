@@ -1,65 +1,31 @@
-"use server";
+import "server-only";
+import { cache } from "react";
 
 import { serializeCarData } from "@/lib/helper";
 import { db } from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/server"
+import { checkUser } from "@/lib/checkUser";
 
-export const getCarById = async (carId) => {
+export const getCarById = cache(async (carId) => {
     try {
 
-        const { userId } = await auth();
-        let dbUser = null;
-
-        if (userId) {
-            dbUser = await db.user.findUnique({ where: { clerkUserId: userId } });
-        }
-
-        const car = await db.car.findUnique({ where: { id: carId } });
-
-        if (!car) {
-            return { success: false, error: "Car not found" };
-        }
-
-        let isWishlisted = false;
-
-        if (dbUser) {
-            const savedCar = await db.userSavedCar.findUnique({
-                where: {
-                    userId_carId: {
-                        userId: dbUser.id,
-                        carId,
-                    },
-                },
-            });
-
-            isWishlisted = !!savedCar;
-        }
-
-
-
-        let userTestDrive = null;
-
-        if (dbUser) {
-
-            const existingTestDrive = await db.testDriveBooking.findFirst({
-                where: {
-                    carId,
-                    userId: dbUser.id,
-                    status: { in: ["PENDING", "CONFIRMED", "COMPLETED"] },
-                },
+        const [dbUser, car, dealership] = await Promise.all([
+            checkUser(),
+            db.car.findUnique({ where: { id: carId } }),
+            db.dealershipInfo.findFirst({ include: { workingHours: true } }),
+        ]);
+        if (!car) return { success: false, error: "Car not found" };
+        const [savedCar, existingTestDrive] = dbUser ? await Promise.all([
+            db.userSavedCar.findUnique({ where: { userId_carId: { userId: dbUser.id, carId } } }),
+            db.testDriveBooking.findFirst({
+                where: { carId, userId: dbUser.id, status: { in: ["PENDING", "CONFIRMED", "COMPLETED"] } },
                 orderBy: { createdAt: "desc" },
-            });
-
-            if (existingTestDrive) {
-                userTestDrive = {
-                    id: existingTestDrive.id,
-                    status: existingTestDrive.status,
-                    bookingDate: existingTestDrive.bookingDate.toISOString(),
-                };
-            }
-        }
-
-        const dealership = await db.dealershipInfo.findFirst({ include: { workingHours: true } });
+            }),
+        ]) : [null, null];
+        const isWishlisted = !!savedCar;
+        const userTestDrive = existingTestDrive ? {
+            id: existingTestDrive.id, status: existingTestDrive.status,
+            bookingDate: existingTestDrive.bookingDate.toISOString(),
+        } : null;
 
         return {
             success: true,
@@ -84,4 +50,4 @@ export const getCarById = async (carId) => {
     } catch (error) {
         throw new Error("Error fetching car details: " + error.message);
     }
-}
+});

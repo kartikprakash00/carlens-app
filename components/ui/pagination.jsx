@@ -1,3 +1,4 @@
+import Link from "next/link"
 import * as React from "react"
 import {
   ChevronLeftIcon,
@@ -47,7 +48,7 @@ function PaginationLink({
   ...props
 }) {
   return (
-    <a
+    <Link
       aria-current={isActive ? "page" : undefined}
       data-slot="pagination-link"
       data-active={isActive}

@@ -1,16 +1,18 @@
-import { getCarFilters } from '@/actions/car-listing'
+import { getCarFilters, getCars } from '@/actions/car-listing'
 import React from 'react'
 import CarFilters from './_components/car-filters';
 import CarListing from './_components/car-listing';
 
-const metadata = {
+export const metadata = {
     title: "Cars | CarLens",
     description: "Browse and search for your dream car",
 };
 
-const CarsPage = async () => {
+const CarsPage = async ({ searchParams }) => {
 
-    const filtersData = await getCarFilters();
+    const params = await searchParams;
+    const [filtersData, result] = await Promise.all([getCarFilters(), getCars({ ...params, limit: 6 })]);
+    const query = Object.fromEntries(Object.entries(params).filter(([, value]) => typeof value === "string"));
 
     return (
         <div className='container mx-auto px-4 py-12'>
@@ -24,7 +26,7 @@ const CarsPage = async () => {
 
                 <div className='flex-1'>
                     {/* Listing */}
-                    <CarListing />
+                    <CarListing result={result} query={query} />
                 </div>
             </div>
         </div>

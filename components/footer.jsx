@@ -1,4 +1,6 @@
 import React from 'react'
+import Link from 'next/link';
+import Image from 'next/image';
 
 const Footer = () => {
     return (
@@ -7,7 +9,7 @@ const Footer = () => {
                 {/* Logo & Description */}
                 <div>
                     <div className="flex md:flex-col justify-center items-center">
-                        <img src="/logo.png" className="w-24 md:w-28 h-auto" alt="CarLens Logo" />
+                        <Image width={112} height={34} src="/logo.png" className="w-24 md:w-28 h-auto" alt="CarLens Logo" />
                         <h2 className="text-2xl font-bold gradient-title">CarLens</h2>
                     </div>
                     <p className="mt-4 text-gray-600 max-w-full mx-2">
@@ -22,9 +24,9 @@ const Footer = () => {
                 <div className='mt-4'>
                     <h3 className="text-lg font-semibold">Company</h3>
                     <ul className="mt-3 space-y-2 text-gray-600">
-                        <li><a href="/" className="hover:text-gray-900">Home</a></li>
-                        <li><a href="/cars" className="hover:text-gray-900">Explore</a></li>
-                        <li><a href="/reservations" className="hover:text-gray-900">Reservations</a></li>
+                        <li><Link href="/" className="hover:text-gray-900">Home</Link></li>
+                        <li><Link href="/cars" className="hover:text-gray-900">Explore</Link></li>
+                        <li><Link href="/reservations" className="hover:text-gray-900">Reservations</Link></li>
                         <li><a href="mailto:support@carlens.com" className="hover:text-gray-900">Contact Us</a></li>
                     </ul>
                 </div>

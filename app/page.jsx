@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import CarListingsLoading from "./(main)/cars/_components/car-listings-loading";
 export const dynamic = 'force-dynamic';
 
 import { getFeaturedCars } from "@/actions/home";
@@ -12,9 +14,12 @@ import { Calendar, Car, ChevronRight, Shield } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
-export default async function Home() {
+async function FeaturedCars() {
+  const featuredCars = await getFeaturedCars();
+  return <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{featuredCars.map(car => <CarCard key={car.id} car={car} />)}</div>;
+}
 
-  const featuredCars = await getFeaturedCars()
+export default function Home() {
 
   return (
     <div className="pt-20 flex flex-col">
@@ -41,11 +46,7 @@ export default async function Home() {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredCars.map((car) => {
-              return <CarCard key={car.id} car={car} />
-            })}
-          </div>
+          <Suspense fallback={<CarListingsLoading />}><FeaturedCars /></Suspense>
         </div>
       </section>
 
@@ -65,7 +66,7 @@ export default async function Home() {
               return (
                 <Link key={make.name} href={`/cars?make=${make.name}`} className="bg-white rounded-lg shadow p-4 text-center hover:shadow-md transition cursor-pointer">
                   <div className="h-16 w-auto mx-auto mb-2 relative">
-                    <Image src={make.image} alt={make.name} fill style={{ objectFit: "contain" }} />
+                    <Image src={make.image} alt={make.name} sizes="(max-width: 768px) 50vw, (max-width: 1024px) 25vw, 17vw" fill style={{ objectFit: "contain" }} />
                   </div>
                   <h3 className="font-medium">{make.name}</h3>
                 </Link>
@@ -124,7 +125,7 @@ export default async function Home() {
               return (
                 <Link key={type.name} href={`/cars?bodyType=${type.name}`} className="relative group cursor-pointer">
                   <div className="overflow-hidden rounded-lg flex justify-end h-28 mb-4 relative">
-                    <Image src={type.image} alt={type.name} fill className="object-contain group-hover:scale-105 transition duration-300" />
+                    <Image src={type.image} alt={type.name} sizes="(max-width: 768px) 50vw, 25vw" fill className="object-contain group-hover:scale-105 transition duration-300" />
                   </div>
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent rounded-lg flex items-end">
                     <h3 className="text-white text-xl font-bold pl-4 pb-2">{type.name}</h3>

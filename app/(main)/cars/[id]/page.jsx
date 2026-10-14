@@ -28,7 +28,7 @@ export const generateMetadata = async ({ params }) => {
             },
         };
     } catch (error) {
-        console.error("Metadata error:", err);
+        console.error("Car metadata lookup failed");
         return {
             title: "Error Loading Car | CarLens",
             description: "Something went wrong while fetching the car details.",
@@ -38,23 +38,10 @@ export const generateMetadata = async ({ params }) => {
 
 const CarPage = async ({ params }) => {
 
-    try {
-        const { id } = await params;
-        const result = await getCarById(id);
+    const { id } = await params;
+    const result = await getCarById(id);
+    if (!result.success) notFound();
+    return <div className='container mx-auto px-4 py-12'><CarDetails car={result.data} testDriveInfo={result.data.testDriveInfo} /></div>;
+};
 
-        if (!result.success) {
-            notFound();
-        }
-
-        return (
-            <div className='container mx-auto px-4 py-12'>
-                <CarDetails car={result.data} testDriveInfo={result.data.testDriveInfo} />
-            </div>
-        )
-    } catch (error) {
-        console.error("Error loading car:", error);
-        notFound();
-    }
-}
-
-export default CarPage
+export default CarPage;

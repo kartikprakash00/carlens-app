@@ -1,16 +1,14 @@
+import { fileURLToPath } from "node:url";
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    experimental: {
-        serverComponentsHmrCache: false, //defaults to true
-    },
+    turbopack: { root: fileURLToPath(new URL(".", import.meta.url)) },
 
     images: {
-        remotePatterns: [
-            {
-                protocol: "https",
-                hostname: "opxstaeqvzakqaqdjvfq.supabase.co",
-            },
-        ],
+        remotePatterns: [...new Set([
+            "opxstaeqvzakqaqdjvfq.supabase.co",
+            ...(process.env.NEXT_PUBLIC_SUPABASE_URL ? [new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname] : []),
+        ])].map(hostname => ({ protocol: "https", hostname })),
     },
 
     async headers() {

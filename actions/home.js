@@ -1,51 +1,29 @@
 "use server";
+import { generateCarContent } from "@/lib/generate-car-content";
 
 import aj from "@/lib/arcjet";
 import { db } from "@/lib/prisma"
 import { request } from "@arcjet/next";
-import { auth } from "@clerk/nextjs/server";
+import { checkUser } from "@/lib/checkUser";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const serializeCarData = (car, isWishlisted = false) => {
-    return {
-        ...car,
-        price: car.price ? parseFloat(car.price.toString()) : 0,
-        createdAt: car.createdAt?.toISOString(),
-        updatedAt: car.updatedAt?.toISOString(),
-        wishlisted: isWishlisted,
-    };
-}
+import { serializeCarData } from "@/lib/helper";
 
 export const getFeaturedCars = async (limit = 3) => {
     try {
 
-        const { userId } = await auth();
-        let dbUser = null;
-        let wishlisted = new Set();
-
-        if (userId) {
-            dbUser = await db.user.findUnique({
-                where: { clerkUserId: userId },
-            });
-
-            if (dbUser) {
-                const savedCars = await db.userSavedCar.findMany({
-                    where: { userId: dbUser.id },
-                    select: { carId: true },
-                });
-
-                wishlisted = new Set(savedCars.map(saved => saved.carId));
-            }
-        }
-
-        const cars = await db.car.findMany({
-            where: {
-                featured: true,
-                status: "AVAILABLE",
-            },
-            take: limit,
-            orderBy: { createdAt: "desc" },
-        });
+        const [dbUser, cars] = await Promise.all([
+            checkUser(),
+            db.car.findMany({
+                where: { featured: true, status: "AVAILABLE" },
+                take: limit, orderBy: { createdAt: "desc" },
+            }),
+        ]);
+        const savedCars = dbUser ? await db.userSavedCar.findMany({
+            where: { userId: dbUser.id, carId: { in: cars.map(car => car.id) } },
+            select: { carId: true },
+        }) : [];
+        const wishlisted = new Set(savedCars.map(saved => saved.carId));
 
         return cars.map(car => serializeCarData(car, wishlisted.has(car.id)));
 
@@ -121,7 +99,7 @@ export const processImageSearch = async (file) => {
             Only respond with the JSON object, nothing else.
         `;
 
-        const result = await model.generateContent([imagePart, prompt]);
+        const result = await generateCarContent(model, [imagePart, prompt]);
 
         const response = await result.response;
         const text = response.text();

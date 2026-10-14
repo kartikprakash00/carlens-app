@@ -1,5 +1,7 @@
 "use server";
 
+import { checkUser } from "@/lib/checkUser";
+
 import { serializeCarData } from "@/lib/helper";
 import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
@@ -13,9 +15,7 @@ export const bookTestDrive = async ({ carId, bookingDate, startTime, endTime, no
             throw new Error("You must be logged in to book a test drive");
         }
 
-        const user = await db.user.findUnique({
-            where: { clerkUserId: userId },
-        });
+        const user = await checkUser();
 
         if (!user) {
             throw new Error("User not found");
@@ -56,6 +56,9 @@ export const bookTestDrive = async ({ carId, bookingDate, startTime, endTime, no
 
         revalidatePath(`/test-drive/${carId}`);
         revalidatePath(`/cars/${carId}`);
+        revalidatePath("/reservations");
+        revalidatePath("/admin/test-drives");
+        revalidatePath("/admin");
 
         return { success: true, data: booking };
 
@@ -73,9 +76,7 @@ export const getUserTestDrives = async () => {
             throw new Error("You must be logged in to book a test drive");
         }
 
-        const user = await db.user.findUnique({
-            where: { clerkUserId: userId },
-        });
+        const user = await checkUser();
 
         if (!user) {
             throw new Error("User not found");
@@ -116,9 +117,7 @@ export const cancelTestDrive = async (bookingId) => {
             throw new Error("You must be logged in to book a test drive");
         }
 
-        const user = await db.user.findUnique({
-            where: { clerkUserId: userId },
-        });
+        const user = await checkUser();
 
         if (!user) {
             throw new Error("User not found");
@@ -149,6 +148,9 @@ export const cancelTestDrive = async (bookingId) => {
 
         revalidatePath("/reservations");
         revalidatePath("/admin/test-drives");
+        revalidatePath("/admin");
+        revalidatePath(`/cars/${booking.carId}`);
+        revalidatePath(`/test-drive/${booking.carId}`);
 
         return { success: true, message: "Test drive cancelled successfully" };
 

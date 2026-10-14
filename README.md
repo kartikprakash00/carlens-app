@@ -10,6 +10,8 @@ npm run dev
 
 This project is verified with Node 22.22.2 (`.nvmrc`). Node 26 stalled during Next.js startup on the development machine; `nvm use` selects the working version. If it is not installed, run `nvm install` first.
 
+Development uses Webpack because Turbopack stalled while compiling the homepage on the development machine. A `Ready` message only confirms the server is listening; the first page request still needs compilation.
+
 ## Performance checks
 
 ```sh
